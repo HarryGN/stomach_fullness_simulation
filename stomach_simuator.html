@@ -1,0 +1,234 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>stomach_simuator</title><meta name="generator" content="MATLAB 9.9"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2024-09-08"><meta name="DC.source" content="stomach_simuator.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% Initialize k-Wave</span>
+clear <span class="string">all</span>;
+clc;
+
+<span class="comment">% Step 1: Define a 2D computational grid for k-Wave</span>
+Nx = 128;       <span class="comment">% Number of grid points in the x direction</span>
+Ny = 128;       <span class="comment">% Number of grid points in the y direction</span>
+dx = 0.1e-3;    <span class="comment">% Grid point spacing in the x direction [m]</span>
+dy = 0.1e-3;    <span class="comment">% Grid point spacing in the y direction [m]</span>
+
+kgrid = kWaveGrid(Nx, dx, Ny, dy);  <span class="comment">% Create k-Wave grid</span>
+
+<span class="comment">% Step 2: Define the properties of the medium (sound speed and density)</span>
+medium.sound_speed = 1500 * ones(Nx, Ny);  <span class="comment">% Initial sound speed [m/s]</span>
+medium.density = 1000 * ones(Nx, Ny);      <span class="comment">% Uniform density [kg/m^3]</span>
+
+<span class="comment">% Step 3: Model different levels of fullness in the stomach</span>
+<span class="comment">% Stomach wall remains constant at the top half of the grid</span>
+stomach_wall_speed = 1540;  <span class="comment">% Sound speed in stomach wall [m/s]</span>
+medium.sound_speed(1:Nx/2, :) = stomach_wall_speed;  <span class="comment">% Top half as stomach wall</span>
+
+<span class="comment">% Define levels of fullness</span>
+fullness_levels = [0.2, 0.5, 0.8];  <span class="comment">% Empty (20%), Half Full (50%), Full (80%)</span>
+
+<span class="keyword">for</span> i = 1:length(fullness_levels)
+
+    <span class="comment">% Set the sound speed for the stomach content based on fullness</span>
+    fullness = fullness_levels(i);
+    empty_sound_speed = 343;  <span class="comment">% Air or gas in empty stomach [m/s]</span>
+    full_sound_speed = 1480;  <span class="comment">% Liquid or food in full stomach [m/s]</span>
+
+    <span class="comment">% Calculate the number of grid points corresponding to the full region</span>
+    full_grid_height = round(fullness * Nx / 2);  <span class="comment">% Fullness from Nx/2 to bottom</span>
+    empty_grid_height = Nx/2 - full_grid_height;  <span class="comment">% Remaining portion (empty)</span>
+
+    <span class="comment">% Assign sound speeds for empty and full regions</span>
+    medium.sound_speed(Nx/2:(Nx/2+empty_grid_height-1), :) = empty_sound_speed;  <span class="comment">% Empty stomach region</span>
+    medium.sound_speed((Nx/2+empty_grid_height):end, :) = full_sound_speed;  <span class="comment">% Full stomach region</span>
+
+    <span class="comment">% Step 4: Define an initial pressure source (simulating an ultrasound pulse)</span>
+    source.p0 = zeros(Nx, Ny);  <span class="comment">% Initialize the pressure field to zero</span>
+    source.p0(Nx/4, Ny/2) = 1;  <span class="comment">% Ultrasound pulse at a specific location</span>
+
+    <span class="comment">% Step 5: Define sensor mask (locations where data will be recorded)</span>
+    sensor.mask = zeros(Nx, Ny);
+    sensor.mask(Nx/2, :) = 1;  <span class="comment">% Sensor line across the middle to record pressure</span>
+
+    <span class="comment">% Step 6: Set simulation time parameters based on the medium properties</span>
+    kgrid.makeTime(medium.sound_speed);  <span class="comment">% Create the time array</span>
+
+    <span class="comment">% Step 7: Run the simulation</span>
+    sensor_data = kspaceFirstOrder2D(kgrid, medium, source, sensor);
+
+    <span class="comment">% Step 8: Visualize the results for each fullness level</span>
+    figure;
+    imagesc(sensor_data);  <span class="comment">% Visualize the pressure data recorded by the sensors</span>
+    xlabel(<span class="string">'Sensor Position'</span>);
+    ylabel(<span class="string">'Time Steps'</span>);
+    title([<span class="string">'Ultrasound Simulation: Fullness Level = '</span>, num2str(fullness * 100), <span class="string">'%'</span>]);
+    colorbar;
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Running k-Wave simulation...
+  start time: 08-Sep-2024 12:30:08
+  reference sound speed: 1540m/s
+  dt: 19.4805ns, t_end: 52.7727us, time steps: 2710
+  input grid size: 128 by 128 grid points (12.8 by 12.8mm)
+  maximum supported frequency: 1.715MHz
+  smoothing p0 distribution...
+  precomputation completed in 0.59468s
+  starting time loop...
+  estimated simulation time 16.0543s...
+  simulation completed in 20.1175s
+  total computation time 20.8582s
+Running k-Wave simulation...
+  start time: 08-Sep-2024 12:30:30
+  reference sound speed: 1540m/s
+  dt: 19.4805ns, t_end: 52.7727us, time steps: 2710
+  input grid size: 128 by 128 grid points (12.8 by 12.8mm)
+  maximum supported frequency: 1.715MHz
+  smoothing p0 distribution...
+  precomputation completed in 0.52189s
+  starting time loop...
+  estimated simulation time 11.9089s...
+  simulation completed in 19.2928s
+  total computation time 19.8886s
+Running k-Wave simulation...
+  start time: 08-Sep-2024 12:30:50
+  reference sound speed: 1540m/s
+  dt: 19.4805ns, t_end: 52.7727us, time steps: 2710
+  input grid size: 128 by 128 grid points (12.8 by 12.8mm)
+  maximum supported frequency: 1.715MHz
+  smoothing p0 distribution...
+  precomputation completed in 0.37668s
+  starting time loop...
+  estimated simulation time 10.775s...
+  simulation completed in 14.1427s
+  total computation time 14.5744s
+</pre><img vspace="5" hspace="5" src="stomach_simuator_01.png" alt=""> <img vspace="5" hspace="5" src="stomach_simuator_02.png" alt=""> <img vspace="5" hspace="5" src="stomach_simuator_03.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% Initialize k-Wave
+clear all;
+clc;
+
+% Step 1: Define a 2D computational grid for k-Wave
+Nx = 128;       % Number of grid points in the x direction
+Ny = 128;       % Number of grid points in the y direction
+dx = 0.1e-3;    % Grid point spacing in the x direction [m]
+dy = 0.1e-3;    % Grid point spacing in the y direction [m]
+
+kgrid = kWaveGrid(Nx, dx, Ny, dy);  % Create k-Wave grid
+
+% Step 2: Define the properties of the medium (sound speed and density)
+medium.sound_speed = 1500 * ones(Nx, Ny);  % Initial sound speed [m/s]
+medium.density = 1000 * ones(Nx, Ny);      % Uniform density [kg/m^3]
+
+% Step 3: Model different levels of fullness in the stomach
+% Stomach wall remains constant at the top half of the grid
+stomach_wall_speed = 1540;  % Sound speed in stomach wall [m/s]
+medium.sound_speed(1:Nx/2, :) = stomach_wall_speed;  % Top half as stomach wall
+
+% Define levels of fullness
+fullness_levels = [0.2, 0.5, 0.8];  % Empty (20%), Half Full (50%), Full (80%)
+
+for i = 1:length(fullness_levels)
+    
+    % Set the sound speed for the stomach content based on fullness
+    fullness = fullness_levels(i);
+    empty_sound_speed = 343;  % Air or gas in empty stomach [m/s]
+    full_sound_speed = 1480;  % Liquid or food in full stomach [m/s]
+    
+    % Calculate the number of grid points corresponding to the full region
+    full_grid_height = round(fullness * Nx / 2);  % Fullness from Nx/2 to bottom
+    empty_grid_height = Nx/2 - full_grid_height;  % Remaining portion (empty)
+    
+    % Assign sound speeds for empty and full regions
+    medium.sound_speed(Nx/2:(Nx/2+empty_grid_height-1), :) = empty_sound_speed;  % Empty stomach region
+    medium.sound_speed((Nx/2+empty_grid_height):end, :) = full_sound_speed;  % Full stomach region
+    
+    % Step 4: Define an initial pressure source (simulating an ultrasound pulse)
+    source.p0 = zeros(Nx, Ny);  % Initialize the pressure field to zero
+    source.p0(Nx/4, Ny/2) = 1;  % Ultrasound pulse at a specific location
+    
+    % Step 5: Define sensor mask (locations where data will be recorded)
+    sensor.mask = zeros(Nx, Ny);
+    sensor.mask(Nx/2, :) = 1;  % Sensor line across the middle to record pressure
+    
+    % Step 6: Set simulation time parameters based on the medium properties
+    kgrid.makeTime(medium.sound_speed);  % Create the time array
+    
+    % Step 7: Run the simulation
+    sensor_data = kspaceFirstOrder2D(kgrid, medium, source, sensor);
+    
+    % Step 8: Visualize the results for each fullness level
+    figure;
+    imagesc(sensor_data);  % Visualize the pressure data recorded by the sensors
+    xlabel('Sensor Position');
+    ylabel('Time Steps');
+    title(['Ultrasound Simulation: Fullness Level = ', num2str(fullness * 100), '%']);
+    colorbar;
+    
+end
+
+##### SOURCE END #####
+--></body></html>
